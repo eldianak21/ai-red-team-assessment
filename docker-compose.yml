@@ -1,0 +1,7 @@
+services:
+  redmnist:
+    build: .
+    image: redmnist:latest
+    container_name: redmnist-api
+    ports:
+      - "8000:8000"
