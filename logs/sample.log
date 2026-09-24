@@ -1,0 +1,6 @@
+{"ts": "2026-09-24T06:37:27.121521+00:00", "level": "INFO", "event": "predict.ok", "taskName": "Task-4", "upload_name": "digit_7.png", "size_bytes": 249, "predicted_class": 7, "confidence": 1.0, "latency_ms": 47.78}
+{"ts": "2026-09-24T06:38:20.607648+00:00", "level": "INFO", "event": "predict.ok", "taskName": "Task-6", "upload_name": "digit_7.png", "size_bytes": 6627, "predicted_class": 7, "confidence": 0.9947, "latency_ms": 10.4}
+{"ts": "2026-09-24T08:42:27.800061+00:00", "level": "INFO", "event": "model_info.viewed", "taskName": null, "total_params": 61706, "trainable_params": 61706}
+{"ts": "2026-09-24T08:42:46.282730+00:00", "level": "INFO", "event": "predict_batch.ok", "taskName": "Task-6", "batch_size": 1, "latency_ms": 206.86}
+{"ts": "2026-09-24T08:43:03.391940+00:00", "level": "INFO", "event": "predict.ok", "taskName": "Task-8", "upload_name": "digit_7.png", "size_bytes": 6627, "predicted_class": 7, "confidence": 0.9947, "latency_ms": 14.52}
+{"ts": "2026-09-24T08:43:53.008627+00:00", "level": "INFO", "event": "predict_batch.ok", "taskName": "Task-10", "batch_size": 1, "latency_ms": 9.16}

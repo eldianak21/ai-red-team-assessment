@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -293,6 +293,490 @@
   function showResult(type, html) {
     resultBox.className = "result show " + type;
     resultBox.innerHTML = html;
+  }
+</script>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RedMnist API</title>
+<style>
+  :root {
+    --wine: #722f37;
+    --wine-dark: #4e1f26;
+    --wine-light: #8f3d47;
+    --white: #ffffff;
+    --black: #0d0d0d;
+    --black-soft: #1a1a1a;
+    --border: rgba(114, 47, 55, 0.25);
+    --shadow: 0 4px 18px rgba(13, 13, 13, 0.15);
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--black);
+    color: var(--white);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container { width: 100%; max-width: 560px; }
+
+  header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  header h1 {
+    margin: 0 0 6px;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    color: var(--white);
+  }
+
+  header h1 span { color: var(--wine-light); }
+
+  header p {
+    margin: 0;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .card {
+    background: var(--black-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+    margin-bottom: 18px;
+  }
+
+  .card:hover {
+    box-shadow: 0 8px 26px rgba(114, 47, 55, 0.35);
+  }
+
+  .card h2 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--wine-light);
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+
+  .drop-zone {
+    border: 1.5px dashed var(--wine);
+    border-radius: 10px;
+    padding: 24px 16px;
+    text-align: center;
+    cursor: pointer;
+    background: rgba(114, 47, 55, 0.08);
+    transition: all 0.2s ease;
+  }
+
+  .drop-zone:hover,
+  .drop-zone.dragover {
+    border-color: var(--wine-light);
+    background: rgba(114, 47, 55, 0.2);
+    transform: translateY(-1px);
+  }
+
+  .drop-zone p {
+    margin: 0;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .drop-zone .highlight {
+    color: var(--wine-light);
+    font-weight: 600;
+  }
+
+  input[type="file"] { display: none; }
+
+  .preview {
+    margin-top: 16px;
+    text-align: center;
+    display: none;
+  }
+
+  .preview img {
+    max-width: 120px;
+    max-height: 120px;
+    border: 1px solid var(--wine);
+    border-radius: 8px;
+    padding: 6px;
+    background: var(--black);
+  }
+
+  button {
+    margin-top: 16px;
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+    background: var(--wine);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    letter-spacing: 0.2px;
+    transition: background 0.2s, transform 0.08s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(114, 47, 55, 0.45);
+  }
+
+  button:hover:not(:disabled) {
+    background: var(--wine-light);
+    box-shadow: 0 6px 18px rgba(114, 47, 55, 0.6);
+    transform: translateY(-1px);
+  }
+
+  button:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(114, 47, 55, 0.45);
+  }
+
+  button:disabled {
+    background: rgba(114, 47, 55, 0.3);
+    box-shadow: none;
+    cursor: not-allowed;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .result {
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .result.show { display: block; }
+
+  .result.success {
+    background: rgba(114, 47, 55, 0.15);
+    border: 1px solid var(--wine);
+    color: var(--white);
+  }
+
+  .result.error {
+    background: rgba(13, 13, 13, 0.9);
+    border: 1px solid var(--wine-dark);
+    color: var(--white);
+  }
+
+  .result .big {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--wine-light);
+    display: block;
+    margin: 2px 0 6px;
+  }
+
+  .result pre {
+    margin: 0;
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: "Consolas", "Monaco", monospace;
+  }
+
+  .result table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .result th, .result td {
+    text-align: left;
+    padding: 4px 8px;
+    border-bottom: 1px solid rgba(114, 47, 55, 0.3);
+  }
+
+  .result th {
+    color: var(--wine-light);
+    font-weight: 600;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Red <span>MNIST</span></h1>
+      <p>Handwritten digit recognition · FastAPI + PyTorch</p>
+    </header>
+
+    <!-- ==== Single predict card ==== -->
+    <div class="card">
+      <h2>Single Predict</h2>
+      <div class="drop-zone" id="dropZone">
+        <p><span class="highlight">Click to upload</span> or drag &amp; drop an image</p>
+        <p style="margin-top:4px;font-size:12px;">PNG / JPG — a single handwritten digit (0–9)</p>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" />
+
+      <div class="preview" id="preview">
+        <img id="previewImg" alt="preview" />
+      </div>
+
+      <button id="predictBtn" disabled>Predict Digit</button>
+
+      <div class="result" id="result"></div>
+    </div>
+
+    <!-- ==== Model info card ==== -->
+    <div class="card">
+      <h2>Model Info</h2>
+      <p style="font-size:13px;color:rgba(255,255,255,0.6);margin:0 0 8px;">
+        Returns architecture, framework version, parameter count, and device from <code>/model_info</code>.
+      </p>
+      <button id="modelInfoBtn">Fetch Model Info</button>
+      <div class="result" id="modelInfoResult"></div>
+    </div>
+
+    <!-- ==== Batch predict card ==== -->
+    <div class="card">
+      <h2>Batch Predict</h2>
+      <div class="drop-zone" id="batchDropZone">
+        <p><span class="highlight">Click to select</span> one or more images</p>
+        <p style="margin-top:4px;font-size:12px;">All are sent to <code>/predict_batch</code> in one request</p>
+      </div>
+      <input type="file" id="batchFileInput" accept="image/*" multiple />
+
+      <div class="preview" id="batchPreview"></div>
+
+      <button id="batchPredictBtn" disabled>Predict Batch</button>
+
+      <div class="result" id="batchResult"></div>
+    </div>
+  </div>
+
+<script>
+  const API_BASE = "http://127.0.0.1:8000";
+
+  // ---------- Single predict ----------
+  const API_URL     = API_BASE + "/predict";
+  const dropZone    = document.getElementById("dropZone");
+  const fileInput   = document.getElementById("fileInput");
+  const preview     = document.getElementById("preview");
+  const previewImg  = document.getElementById("previewImg");
+  const predictBtn  = document.getElementById("predictBtn");
+  const resultBox   = document.getElementById("result");
+
+  let selectedFile = null;
+
+  dropZone.addEventListener("click", () => fileInput.click());
+
+  ["dragenter", "dragover"].forEach(evt =>
+    dropZone.addEventListener(evt, e => {
+      e.preventDefault();
+      dropZone.classList.add("dragover");
+    })
+  );
+  ["dragleave", "drop"].forEach(evt =>
+    dropZone.addEventListener(evt, e => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+    })
+  );
+  dropZone.addEventListener("drop", e => {
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+  fileInput.addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (file) handleFile(file);
+  });
+
+  function handleFile(file) {
+    if (!file.type.startsWith("image/")) {
+      showResult(resultBox, "error", "Please select a valid image file.");
+      return;
+    }
+    selectedFile = file;
+    previewImg.src = URL.createObjectURL(file);
+    preview.style.display = "block";
+    predictBtn.disabled = false;
+    resultBox.className = "result";
+  }
+
+  predictBtn.addEventListener("click", async () => {
+    if (!selectedFile) return;
+    predictBtn.disabled = true;
+    predictBtn.textContent = "Predicting...";
+    showResult(resultBox, "success", "Sending image to the model...");
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    try {
+      const res = await fetch(API_URL, { method: "POST", body: formData });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      showResult(
+        resultBox,
+        "success",
+        `<span class="big">${data.predicted_class}</span>
+         Confidence: <strong>${(data.confidence * 100).toFixed(2)}%</strong>`
+      );
+    } catch (err) {
+      showResult(
+        resultBox,
+        "error",
+        `Prediction failed: ${err.message}<br/>
+         <small>Is the FastAPI server running at <code>127.0.0.1:8000</code>?</small>`
+      );
+    } finally {
+      predictBtn.disabled = false;
+      predictBtn.textContent = "Predict Digit";
+    }
+  });
+
+  // ---------- Model info ----------
+  const modelInfoBtn    = document.getElementById("modelInfoBtn");
+  const modelInfoResult = document.getElementById("modelInfoResult");
+
+  modelInfoBtn.addEventListener("click", async () => {
+    modelInfoBtn.disabled = true;
+    modelInfoBtn.textContent = "Fetching...";
+    showResult(modelInfoResult, "success", "Calling /model_info...");
+
+    try {
+      const res = await fetch(API_BASE + "/model_info");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      showResult(modelInfoResult, "success", `<pre>${JSON.stringify(data, null, 2)}</pre>`);
+    } catch (err) {
+      showResult(modelInfoResult, "error", `Failed to fetch model info: ${err.message}`);
+    } finally {
+      modelInfoBtn.disabled = false;
+      modelInfoBtn.textContent = "Fetch Model Info";
+    }
+  });
+
+  // ---------- Batch predict ----------
+  const batchDropZone    = document.getElementById("batchDropZone");
+  const batchFileInput   = document.getElementById("batchFileInput");
+  const batchPreview     = document.getElementById("batchPreview");
+  const batchPredictBtn  = document.getElementById("batchPredictBtn");
+  const batchResult      = document.getElementById("batchResult");
+
+  let batchFiles = [];
+
+  batchDropZone.addEventListener("click", () => batchFileInput.click());
+
+  batchFileInput.addEventListener("change", e => {
+    batchFiles = Array.from(e.target.files);
+    renderBatchPreview();
+  });
+
+  ["dragenter", "dragover"].forEach(evt =>
+    batchDropZone.addEventListener(evt, e => {
+      e.preventDefault();
+      batchDropZone.classList.add("dragover");
+    })
+  );
+  ["dragleave", "drop"].forEach(evt =>
+    batchDropZone.addEventListener(evt, e => {
+      e.preventDefault();
+      batchDropZone.classList.remove("dragover");
+    })
+  );
+  batchDropZone.addEventListener("drop", e => {
+    batchFiles = Array.from(e.dataTransfer.files);
+    renderBatchPreview();
+  });
+
+  function renderBatchPreview() {
+    batchPreview.innerHTML = "";
+    if (batchFiles.length === 0) {
+      batchPreview.style.display = "none";
+      batchPredictBtn.disabled = true;
+      return;
+    }
+    batchPreview.style.display = "block";
+    batchFiles.forEach(f => {
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(f);
+      img.style.margin = "4px";
+      batchPreview.appendChild(img);
+    });
+    batchPredictBtn.disabled = false;
+  }
+
+  batchPredictBtn.addEventListener("click", async () => {
+    if (batchFiles.length === 0) return;
+    batchPredictBtn.disabled = true;
+    batchPredictBtn.textContent = `Predicting ${batchFiles.length} image(s)...`;
+    showResult(batchResult, "success", "Sending batch...");
+
+    const formData = new FormData();
+    batchFiles.forEach(f => formData.append("files", f));
+
+    try {
+      const res = await fetch(API_BASE + "/predict_batch", { method: "POST", body: formData });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+
+      let rows = "";
+      data.results.forEach(r => {
+        if (r.error) {
+          rows += `<tr><td>${r.upload_name}</td><td colspan="2" style="color:#c66">${r.error}</td></tr>`;
+        } else {
+          rows += `<tr><td>${r.upload_name}</td><td><strong>${r.predicted_class}</strong></td><td>${(r.confidence * 100).toFixed(2)}%</td></tr>`;
+        }
+      });
+
+      showResult(
+        batchResult,
+        "success",
+        `<div>${data.count} result(s) in ${data.latency_ms} ms</div>
+         <table>
+           <thead><tr><th>File</th><th>Prediction</th><th>Confidence</th></tr></thead>
+           <tbody>${rows}</tbody>
+         </table>`
+      );
+    } catch (err) {
+      showResult(batchResult, "error", `Batch prediction failed: ${err.message}`);
+    } finally {
+      batchPredictBtn.disabled = false;
+      batchPredictBtn.textContent = "Predict Batch";
+    }
+  });
+
+  // ---------- Shared helper ----------
+  function showResult(box, type, html) {
+    box.className = "result show " + type;
+    box.innerHTML = html;
   }
 </script>
 </body>

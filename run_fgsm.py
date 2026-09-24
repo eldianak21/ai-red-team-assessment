@@ -1,13 +1,4 @@
-"""
-Step 1 of the attack demo: FGSM only.
 
-Loads your real model, predicts on a clean image (baseline), then
-generates an FGSM adversarial version of that same image and predicts
-on it too — so you can directly compare the two predictions.
-
-Run from the PROJECT ROOT:
-    python run_fgsm.py
-"""
 
 from pathlib import Path
 
