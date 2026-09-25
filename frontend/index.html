@@ -1,783 +1,3698 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>RedMnist API</title>
-<style>
-  :root {
-    --wine: #722f37;
-    --wine-dark: #4e1f26;
-    --wine-light: #8f3d47;
-    --white: #ffffff;
-    --black: #0d0d0d;
-    --black-soft: #1a1a1a;
-    --border: rgba(114, 47, 55, 0.25);
-    --shadow: 0 4px 18px rgba(13, 13, 13, 0.15);
-    --radius: 14px;
-  }
-
-  * { box-sizing: border-box; }
-
-  body {
-    margin: 0;
-    min-height: 100vh;
-    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
-    background: var(--black);
-    color: var(--white);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 40px 16px;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .container { width: 100%; max-width: 520px; }
-
-  header {
-    text-align: center;
-    margin-bottom: 24px;
-  }
-
-  header h1 {
-    margin: 0 0 6px;
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.3px;
-    color: var(--white);
-  }
-
-  header h1 span { color: var(--wine-light); }
-
-  header p {
-    margin: 0;
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.55);
-  }
-
-  .card {
-    background: var(--black-soft);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 22px;
-    box-shadow: var(--shadow);
-    transition: box-shadow 0.25s ease, transform 0.25s ease;
-  }
-
-  .card:hover {
-    box-shadow: 0 8px 26px rgba(114, 47, 55, 0.35);
-  }
-
-  .drop-zone {
-    border: 1.5px dashed var(--wine);
-    border-radius: 10px;
-    padding: 24px 16px;
-    text-align: center;
-    cursor: pointer;
-    background: rgba(114, 47, 55, 0.08);
-    transition: all 0.2s ease;
-  }
-
-  .drop-zone:hover,
-  .drop-zone.dragover {
-    border-color: var(--wine-light);
-    background: rgba(114, 47, 55, 0.2);
-    transform: translateY(-1px);
-  }
-
-  .drop-zone p {
-    margin: 0;
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.6);
-  }
-
-  .drop-zone .highlight {
-    color: var(--wine-light);
-    font-weight: 600;
-  }
-
-  input[type="file"] { display: none; }
-
-  .preview {
-    margin-top: 16px;
-    text-align: center;
-    display: none;
-  }
-
-  .preview img {
-    max-width: 120px;
-    max-height: 120px;
-    border: 1px solid var(--wine);
-    border-radius: 8px;
-    padding: 6px;
-    background: var(--black);
-  }
-
-  button {
-    margin-top: 16px;
-    width: 100%;
-    padding: 10px 16px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--white);
-    background: var(--wine);
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    letter-spacing: 0.2px;
-    transition: background 0.2s, transform 0.08s, box-shadow 0.2s;
-    box-shadow: 0 4px 12px rgba(114, 47, 55, 0.45);
-  }
-
-  button:hover:not(:disabled) {
-    background: var(--wine-light);
-    box-shadow: 0 6px 18px rgba(114, 47, 55, 0.6);
-    transform: translateY(-1px);
-  }
-
-  button:active:not(:disabled) {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(114, 47, 55, 0.45);
-  }
-
-  button:disabled {
-    background: rgba(114, 47, 55, 0.3);
-    box-shadow: none;
-    cursor: not-allowed;
-    color: rgba(255, 255, 255, 0.4);
-  }
-
-  .result {
-    margin-top: 16px;
-    padding: 14px;
-    border-radius: 10px;
-    font-size: 14px;
-    line-height: 1.5;
-    display: none;
-    animation: fadeIn 0.3s ease;
-  }
-
-  .result.show { display: block; }
-
-  .result.success {
-    background: rgba(114, 47, 55, 0.15);
-    border: 1px solid var(--wine);
-    color: var(--white);
-  }
-
-  .result.error {
-    background: rgba(13, 13, 13, 0.9);
-    border: 1px solid var(--wine-dark);
-    color: var(--white);
-  }
-
-  .result .big {
-    font-size: 26px;
-    font-weight: 700;
-    color: var(--wine-light);
-    display: block;
-    margin: 2px 0 6px;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-</style>
-</head>
-<body>
-  <div class="container">
-    <header>
-      <h1>Red <span>MNIST</span></h1>
-      <p>Handwritten digit recognition · FastAPI + PyTorch</p>
-    </header>
-    <div class="card">
-      <div class="drop-zone" id="dropZone">
-        <p><span class="highlight">Click to upload</span> or drag &amp; drop an image</p>
-        <p style="margin-top:4px;font-size:12px;">PNG / JPG — a single handwritten digit (0–9)</p>
-      </div>
-      <input type="file" id="fileInput" accept="image/*" />
-
-      <div class="preview" id="preview">
-        <img id="previewImg" alt="preview" />
-      </div>
-
-      <button id="predictBtn" disabled>Predict Digit</button>
-
-      <div class="result" id="result"></div>
-    </div>
-  </div>
-
-<script>
-  const API_URL = "http://127.0.0.1:8000/predict";
-
-  const dropZone   = document.getElementById("dropZone");
-  const fileInput  = document.getElementById("fileInput");
-  const preview    = document.getElementById("preview");
-  const previewImg = document.getElementById("previewImg");
-  const predictBtn = document.getElementById("predictBtn");
-  const resultBox  = document.getElementById("result");
-
-  let selectedFile = null;
-
-  dropZone.addEventListener("click", () => fileInput.click());
-
-  ["dragenter", "dragover"].forEach(evt =>
-    dropZone.addEventListener(evt, e => {
-      e.preventDefault();
-      dropZone.classList.add("dragover");
-    })
-  );
-  ["dragleave", "drop"].forEach(evt =>
-    dropZone.addEventListener(evt, e => {
-      e.preventDefault();
-      dropZone.classList.remove("dragover");
-    })
-  );
-  dropZone.addEventListener("drop", e => {
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  });
-
-  fileInput.addEventListener("change", e => {
-    const file = e.target.files[0];
-    if (file) handleFile(file);
-  });
-
-  function handleFile(file) {
-    if (!file.type.startsWith("image/")) {
-      showResult("error", "Please select a valid image file.");
-      return;
-    }
-    selectedFile = file;
-    previewImg.src = URL.createObjectURL(file);
-    preview.style.display = "block";
-    predictBtn.disabled = false;
-    resultBox.className = "result";
-  }
-
-  predictBtn.addEventListener("click", async () => {
-    if (!selectedFile) return;
-
-    predictBtn.disabled = true;
-    predictBtn.textContent = "Predicting...";
-    showResult("success", "Sending image to the model...");
-
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-
-    try {
-      const res = await fetch(API_URL, { method: "POST", body: formData });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || `HTTP ${res.status}`);
-      }
-      const data = await res.json();
-      showResult(
-        "success",
-        `<span class="big">${data.predicted_class}</span>
-         Confidence: <strong>${(data.confidence * 100).toFixed(2)}%</strong>`
-      );
-    } catch (err) {
-      showResult(
-        "error",
-        `Prediction failed: ${err.message}<br/>
-         <small>Is the FastAPI server running at <code>127.0.0.1:8000</code>?</small>`
-      );
-    } finally {
-      predictBtn.disabled = false;
-      predictBtn.textContent = "Predict Digit";
-    }
-  });
-
-  function showResult(type, html) {
-    resultBox.className = "result show " + type;
-    resultBox.innerHTML = html;
-  }
-</script>
-</body>
-</html> -->
-
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>RedMnist API</title>
-<style>
-  :root {
-    --wine: #722f37;
-    --wine-dark: #4e1f26;
-    --wine-light: #8f3d47;
-    --white: #ffffff;
-    --black: #0d0d0d;
-    --black-soft: #1a1a1a;
-    --border: rgba(114, 47, 55, 0.25);
-    --shadow: 0 4px 18px rgba(13, 13, 13, 0.15);
-    --radius: 14px;
-  }
 
-  * { box-sizing: border-box; }
+  <meta charset="UTF-8">
 
-  body {
-    margin: 0;
-    min-height: 100vh;
-    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
-    background: var(--black);
-    color: var(--white);
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 40px 16px;
-    -webkit-font-smoothing: antialiased;
-  }
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-  .container { width: 100%; max-width: 560px; }
+  <title>RedMNIST · Security Console</title>
 
-  header {
-    text-align: center;
-    margin-bottom: 24px;
-  }
+  <style>
 
-  header h1 {
-    margin: 0 0 6px;
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.3px;
-    color: var(--white);
-  }
+    :root {
+      --wine: #722f37;
+      --wine-light: #a94c59;
+      --wine-dark: #4e1f26;
 
-  header h1 span { color: var(--wine-light); }
+      --black: #090909;
+      --black-soft: #101010;
+      --black-card: #151515;
+      --black-input: #0c0c0c;
 
-  header p {
-    margin: 0;
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.55);
-  }
+      --white: #ffffff;
 
-  .card {
-    background: var(--black-soft);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 22px;
-    box-shadow: var(--shadow);
-    transition: box-shadow 0.25s ease, transform 0.25s ease;
-    margin-bottom: 18px;
-  }
+      --muted: rgba(255,255,255,.56);
+      --muted-2: rgba(255,255,255,.36);
 
-  .card:hover {
-    box-shadow: 0 8px 26px rgba(114, 47, 55, 0.35);
-  }
+      --border: rgba(114,47,55,.36);
+      --border-soft: rgba(255,255,255,.08);
 
-  .card h2 {
-    margin: 0 0 12px;
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--wine-light);
-    letter-spacing: 0.3px;
-    text-transform: uppercase;
-  }
+      --green: #65d391;
+      --yellow: #e7c96a;
+      --red: #ef7373;
+      --blue: #78a8ff;
 
-  .drop-zone {
-    border: 1.5px dashed var(--wine);
-    border-radius: 10px;
-    padding: 24px 16px;
-    text-align: center;
-    cursor: pointer;
-    background: rgba(114, 47, 55, 0.08);
-    transition: all 0.2s ease;
-  }
+      --radius: 13px;
+    }
 
-  .drop-zone:hover,
-  .drop-zone.dragover {
-    border-color: var(--wine-light);
-    background: rgba(114, 47, 55, 0.2);
-    transform: translateY(-1px);
-  }
 
-  .drop-zone p {
-    margin: 0;
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.6);
-  }
+    * {
+      box-sizing: border-box;
+    }
 
-  .drop-zone .highlight {
-    color: var(--wine-light);
-    font-weight: 600;
-  }
 
-  input[type="file"] { display: none; }
+    html {
+      scroll-behavior: smooth;
+    }
 
-  .preview {
-    margin-top: 16px;
-    text-align: center;
-    display: none;
-  }
 
-  .preview img {
-    max-width: 120px;
-    max-height: 120px;
-    border: 1px solid var(--wine);
-    border-radius: 8px;
-    padding: 6px;
-    background: var(--black);
-  }
+    body {
 
-  button {
-    margin-top: 16px;
-    width: 100%;
-    padding: 10px 16px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--white);
-    background: var(--wine);
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    letter-spacing: 0.2px;
-    transition: background 0.2s, transform 0.08s, box-shadow 0.2s;
-    box-shadow: 0 4px 12px rgba(114, 47, 55, 0.45);
-  }
+      margin: 0;
 
-  button:hover:not(:disabled) {
-    background: var(--wine-light);
-    box-shadow: 0 6px 18px rgba(114, 47, 55, 0.6);
-    transform: translateY(-1px);
-  }
+      min-height: 100vh;
 
-  button:active:not(:disabled) {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(114, 47, 55, 0.45);
-  }
+      background:
+        radial-gradient(
+          circle at 10% 5%,
+          rgba(114,47,55,.18),
+          transparent 28%
+        ),
+        radial-gradient(
+          circle at 90% 90%,
+          rgba(114,47,55,.10),
+          transparent 28%
+        ),
+        var(--black);
 
-  button:disabled {
-    background: rgba(114, 47, 55, 0.3);
-    box-shadow: none;
-    cursor: not-allowed;
-    color: rgba(255, 255, 255, 0.4);
-  }
+      color: var(--white);
 
-  .result {
-    margin-top: 16px;
-    padding: 14px;
-    border-radius: 10px;
-    font-size: 14px;
-    line-height: 1.5;
-    display: none;
-    animation: fadeIn 0.3s ease;
-  }
+      font-family:
+        Inter,
+        "Segoe UI",
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
 
-  .result.show { display: block; }
+      padding: 28px 16px 45px;
 
-  .result.success {
-    background: rgba(114, 47, 55, 0.15);
-    border: 1px solid var(--wine);
-    color: var(--white);
-  }
+    }
 
-  .result.error {
-    background: rgba(13, 13, 13, 0.9);
-    border: 1px solid var(--wine-dark);
-    color: var(--white);
-  }
 
-  .result .big {
-    font-size: 26px;
-    font-weight: 700;
-    color: var(--wine-light);
-    display: block;
-    margin: 2px 0 6px;
-  }
+    button,
+    input {
+      font: inherit;
+    }
 
-  .result pre {
-    margin: 0;
-    font-size: 12px;
-    white-space: pre-wrap;
-    word-break: break-word;
-    color: rgba(255, 255, 255, 0.9);
-    font-family: "Consolas", "Monaco", monospace;
-  }
 
-  .result table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
+    button {
+      border: 0;
+    }
 
-  .result th, .result td {
-    text-align: left;
-    padding: 4px 8px;
-    border-bottom: 1px solid rgba(114, 47, 55, 0.3);
-  }
 
-  .result th {
-    color: var(--wine-light);
-    font-weight: 600;
-  }
+    .container {
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-</style>
+      width: 100%;
+
+      max-width: 1080px;
+
+      margin: auto;
+
+    }
+
+
+    /* =====================================================
+       HEADER
+    ===================================================== */
+
+    header {
+
+      display: flex;
+
+      align-items: flex-end;
+
+      justify-content: space-between;
+
+      gap: 20px;
+
+      margin-bottom: 20px;
+
+    }
+
+
+    .brand-eyebrow {
+
+      margin-bottom: 7px;
+
+      color: var(--wine-light);
+
+      font-size: 9px;
+
+      font-weight: 800;
+
+      letter-spacing: 1.6px;
+
+      text-transform: uppercase;
+
+    }
+
+
+    header h1 {
+
+      margin: 0;
+
+      font-size: clamp(24px,4vw,31px);
+
+      line-height: 1;
+
+      letter-spacing: -1px;
+
+    }
+
+
+    header h1 span {
+
+      color: var(--wine-light);
+
+    }
+
+
+    header p {
+
+      max-width: 620px;
+
+      margin: 8px 0 0;
+
+      color: var(--muted);
+
+      font-size: 11px;
+
+      line-height: 1.6;
+
+    }
+
+
+    .header-status {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 8px;
+
+      flex-shrink: 0;
+
+      padding: 8px 11px;
+
+      border:
+        1px solid var(--border-soft);
+
+      border-radius: 999px;
+
+      background: rgba(255,255,255,.025);
+
+      color: var(--muted);
+
+      font-size: 10px;
+
+    }
+
+
+    .status-dot {
+
+      width: 7px;
+
+      height: 7px;
+
+      border-radius: 50%;
+
+      background: var(--yellow);
+
+      box-shadow: 0 0 10px currentColor;
+
+    }
+
+
+    /* =====================================================
+       CARD
+    ===================================================== */
+
+    .card {
+
+      margin-bottom: 13px;
+
+      padding: 15px;
+
+      border:
+        1px solid var(--border);
+
+      border-radius: var(--radius);
+
+      background:
+        rgba(20,20,20,.94);
+
+      box-shadow:
+        0 14px 40px rgba(0,0,0,.22);
+
+    }
+
+
+    .card-header {
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 12px;
+
+      margin-bottom: 12px;
+
+    }
+
+
+    .card-title {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 8px;
+
+    }
+
+
+    .card-title h2 {
+
+      margin: 0;
+
+      font-size: 11px;
+
+      font-weight: 800;
+
+      letter-spacing: .7px;
+
+      text-transform: uppercase;
+
+    }
+
+
+    .title-mark {
+
+      width: 6px;
+
+      height: 6px;
+
+      border-radius: 50%;
+
+      background: var(--wine-light);
+
+      box-shadow:
+        0 0 10px rgba(169,76,89,.75);
+
+    }
+
+
+    .subtle {
+
+      color: var(--muted-2);
+
+      font-size: 9px;
+
+    }
+
+
+    /* =====================================================
+       BUTTONS
+    ===================================================== */
+
+    .button {
+
+      display: inline-flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      min-height: 35px;
+
+      padding: 8px 12px;
+
+      border-radius: 8px;
+
+      background: var(--wine);
+
+      color: white;
+
+      font-size: 10px;
+
+      font-weight: 700;
+
+      cursor: pointer;
+
+      transition:
+        .18s ease;
+
+    }
+
+
+    .button:hover {
+
+      background: var(--wine-light);
+
+      transform: translateY(-1px);
+
+    }
+
+
+    .button:disabled {
+
+      opacity: .42;
+
+      cursor: not-allowed;
+
+      transform: none;
+
+    }
+
+
+    .button.secondary {
+
+      background: #222;
+
+    }
+
+
+    .button.secondary:hover {
+
+      background: #2b2b2b;
+
+    }
+
+
+    .button.outline {
+
+      border:
+        1px solid rgba(169,76,89,.45);
+
+      background: transparent;
+
+      color: #df7d89;
+
+    }
+
+
+    /* =====================================================
+       API TARGET
+    ===================================================== */
+
+    .api-row {
+
+      display: grid;
+
+      grid-template-columns: 1fr auto;
+
+      gap: 8px;
+
+    }
+
+
+    input[type="text"] {
+
+      width: 100%;
+
+      padding: 10px 11px;
+
+      border:
+        1px solid var(--border-soft);
+
+      border-radius: 8px;
+
+      outline: none;
+
+      background: var(--black-input);
+
+      color: white;
+
+      font-size: 10px;
+
+    }
+
+
+    input[type="text"]:focus {
+
+      border-color:
+        rgba(169,76,89,.7);
+
+      box-shadow:
+        0 0 0 3px
+        rgba(114,47,55,.1);
+
+    }
+
+
+    /* =====================================================
+       ENDPOINT GRID
+    ===================================================== */
+
+    .endpoint-grid {
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(2,minmax(0,1fr));
+
+      gap: 10px;
+
+    }
+
+
+    .endpoint-card {
+
+      padding: 13px;
+
+      border:
+        1px solid var(--border-soft);
+
+      border-radius: 10px;
+
+      background: #101010;
+
+      transition: .18s ease;
+
+    }
+
+
+    .endpoint-card:hover {
+
+      border-color:
+        rgba(114,47,55,.7);
+
+      transform: translateY(-1px);
+
+    }
+
+
+    .endpoint-top {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 7px;
+
+      margin-bottom: 7px;
+
+    }
+
+
+    .method {
+
+      padding: 4px 6px;
+
+      border-radius: 5px;
+
+      background:
+        rgba(114,47,55,.2);
+
+      color: #e38a95;
+
+      font-size: 8px;
+
+      font-weight: 900;
+
+    }
+
+
+    .method.post {
+
+      background:
+        rgba(120,168,255,.09);
+
+      color: #8eb5ff;
+
+    }
+
+
+    .path {
+
+      font-family:
+        Consolas,
+        Monaco,
+        monospace;
+
+      font-size: 11px;
+
+    }
+
+
+    .description {
+
+      margin-bottom: 10px;
+
+      min-height: 28px;
+
+      color: var(--muted);
+
+      font-size: 9px;
+
+      line-height: 1.5;
+
+    }
+
+
+    .endpoint-actions {
+
+      display: flex;
+
+      gap: 6px;
+
+    }
+
+
+    .small-button {
+
+      min-height: 31px;
+
+      padding: 7px 10px;
+
+      border-radius: 7px;
+
+      background: #222;
+
+      color: white;
+
+      font-size: 9px;
+
+      font-weight: 700;
+
+      cursor: pointer;
+
+      transition: .18s ease;
+
+    }
+
+
+    .small-button:hover {
+
+      background: var(--wine);
+
+    }
+
+
+    /* =====================================================
+       RESULT BOX
+       IMPORTANT:
+       Every endpoint owns its result box.
+    ===================================================== */
+
+    .test-result {
+
+      display: none;
+
+      margin-top: 10px;
+
+      border:
+        1px solid var(--border-soft);
+
+      border-radius: 9px;
+
+      overflow: hidden;
+
+      background: #080808;
+
+    }
+
+
+    .test-result.show {
+
+      display: block;
+
+    }
+
+
+    .result-header {
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 10px;
+
+      padding: 8px 10px;
+
+      border-bottom:
+        1px solid var(--border-soft);
+
+      background: #0d0d0d;
+
+    }
+
+
+    .result-title {
+
+      font-size: 9px;
+
+      font-weight: 800;
+
+      letter-spacing: .5px;
+
+      text-transform: uppercase;
+
+    }
+
+
+    .result-status {
+
+      font-size: 9px;
+
+      font-weight: 800;
+
+    }
+
+
+    .result-status.ok {
+
+      color: var(--green);
+
+    }
+
+
+    .result-status.error {
+
+      color: var(--red);
+
+    }
+
+
+    .result-meta {
+
+      display: flex;
+
+      flex-wrap: wrap;
+
+      gap: 11px;
+
+      padding: 7px 10px;
+
+      border-bottom:
+        1px solid var(--border-soft);
+
+      color: var(--muted);
+
+      font-size: 8px;
+
+    }
+
+
+    .result-meta strong {
+
+      color: white;
+
+    }
+
+
+    .result-body {
+
+      max-height: 230px;
+
+      overflow: auto;
+
+      padding: 10px;
+
+    }
+
+
+    pre {
+
+      margin: 0;
+
+      white-space: pre-wrap;
+
+      word-break: break-word;
+
+      color: #ddd;
+
+      font-family:
+        Consolas,
+        Monaco,
+        monospace;
+
+      font-size: 9px;
+
+      line-height: 1.5;
+
+    }
+
+
+    /* =====================================================
+       UPLOAD AREA
+    ===================================================== */
+
+    .upload-area {
+
+      padding: 13px;
+
+      border:
+        1px dashed
+        rgba(169,76,89,.55);
+
+      border-radius: 9px;
+
+      background:
+        rgba(114,47,55,.035);
+
+      text-align: center;
+
+      cursor: pointer;
+
+      transition: .18s ease;
+
+    }
+
+
+    .upload-area:hover,
+    .upload-area.dragover {
+
+      border-color:
+        var(--wine-light);
+
+      background:
+        rgba(114,47,55,.1);
+
+    }
+
+
+    .upload-area strong {
+
+      display: block;
+
+      margin-bottom: 4px;
+
+      font-size: 10px;
+
+    }
+
+
+    .upload-area span {
+
+      color: var(--muted);
+
+      font-size: 9px;
+
+    }
+
+
+    .file-input {
+
+      display: none;
+
+    }
+
+
+    /* =====================================================
+       FILE INFORMATION
+    ===================================================== */
+
+    .file-info {
+
+      display: none;
+
+      margin-top: 9px;
+
+      padding: 9px;
+
+      border:
+        1px solid var(--border-soft);
+
+      border-radius: 8px;
+
+      background: #090909;
+
+    }
+
+
+    .file-info.show {
+
+      display: block;
+
+    }
+
+
+    .file-grid {
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(4,minmax(0,1fr));
+
+      gap: 8px;
+
+    }
+
+
+    .info-label {
+
+      display: block;
+
+      margin-bottom: 3px;
+
+      color: var(--muted-2);
+
+      font-size: 7px;
+
+      text-transform: uppercase;
+
+      letter-spacing: .5px;
+
+    }
+
+
+    .info-value {
+
+      overflow: hidden;
+
+      color: white;
+
+      font-family:
+        Consolas,
+        Monaco,
+        monospace;
+
+      font-size: 9px;
+
+      text-overflow: ellipsis;
+
+      white-space: nowrap;
+
+    }
+
+
+    /* =====================================================
+       VALIDATION
+    ===================================================== */
+
+    .validation {
+
+      display: none;
+
+      margin-top: 8px;
+
+      padding: 7px 9px;
+
+      border-radius: 7px;
+
+      font-size: 9px;
+
+      line-height: 1.5;
+
+    }
+
+
+    .validation.show {
+
+      display: block;
+
+    }
+
+
+    .validation.error {
+
+      border:
+        1px solid
+        rgba(239,115,115,.25);
+
+      background:
+        rgba(239,115,115,.07);
+
+      color: var(--red);
+
+    }
+
+
+    .validation.warning {
+
+      border:
+        1px solid
+        rgba(231,201,106,.25);
+
+      background:
+        rgba(231,201,106,.07);
+
+      color: var(--yellow);
+
+    }
+
+
+    .validation.success {
+
+      border:
+        1px solid
+        rgba(101,211,145,.25);
+
+      background:
+        rgba(101,211,145,.07);
+
+      color: var(--green);
+
+    }
+
+
+    /* =====================================================
+       PREDICT PREVIEW
+    ===================================================== */
+
+    .preview-layout {
+
+      display: grid;
+
+      grid-template-columns:
+        125px 1fr;
+
+      gap: 11px;
+
+      margin-top: 9px;
+
+    }
+
+
+    .preview {
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      width: 125px;
+
+      height: 125px;
+
+      overflow: hidden;
+
+      border:
+        1px solid var(--border-soft);
+
+      border-radius: 8px;
+
+      background: #090909;
+
+    }
+
+
+    .preview img {
+
+      max-width: 100%;
+
+      max-height: 100%;
+
+      object-fit: contain;
+
+    }
+
+
+    .selected-name {
+
+      margin-bottom: 6px;
+
+      font-size: 10px;
+
+      font-weight: 700;
+
+    }
+
+
+    .selected-description {
+
+      color: var(--muted);
+
+      font-size: 9px;
+
+      line-height: 1.5;
+
+    }
+
+
+    .action-row {
+
+      display: flex;
+
+      gap: 6px;
+
+      margin-top: 10px;
+
+    }
+
+
+    /* =====================================================
+       BATCH
+    ===================================================== */
+
+    .batch-summary {
+
+      display: none;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 10px;
+
+      margin-top: 9px;
+
+      padding: 8px 9px;
+
+      border:
+        1px solid var(--border-soft);
+
+      border-radius: 8px;
+
+      background: #090909;
+
+    }
+
+
+    .batch-summary.show {
+
+      display: flex;
+
+    }
+
+
+    .batch-count {
+
+      font-size: 9px;
+
+      font-weight: 700;
+
+    }
+
+
+    .batch-count span {
+
+      color: var(--wine-light);
+
+    }
+
+
+    .batch-files {
+
+      display: none;
+
+      max-height: 160px;
+
+      overflow: auto;
+
+      margin-top: 8px;
+
+      border:
+        1px solid var(--border-soft);
+
+      border-radius: 8px;
+
+      background: #090909;
+
+    }
+
+
+    .batch-files.show {
+
+      display: block;
+
+    }
+
+
+    .batch-file {
+
+      display: grid;
+
+      grid-template-columns:
+        1fr auto auto;
+
+      gap: 9px;
+
+      padding: 7px 9px;
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.045);
+
+      font-size: 8px;
+
+    }
+
+
+    .batch-file:last-child {
+
+      border-bottom: 0;
+
+    }
+
+
+    .batch-file-name {
+
+      min-width: 0;
+
+      overflow: hidden;
+
+      text-overflow: ellipsis;
+
+      white-space: nowrap;
+
+    }
+
+
+    .batch-file-size {
+
+      color: var(--muted);
+
+    }
+
+
+    .batch-file-status.good {
+
+      color: var(--green);
+
+    }
+
+
+    .batch-file-status.bad {
+
+      color: var(--red);
+
+    }
+
+
+    /* =====================================================
+       BATCH RESULT TABLE
+    ===================================================== */
+
+    .table-wrapper {
+
+      overflow-x: auto;
+
+    }
+
+
+    .result-table {
+
+      width: 100%;
+
+      border-collapse: collapse;
+
+      font-size: 8px;
+
+    }
+
+
+    .result-table th {
+
+      padding: 7px;
+
+      border-bottom:
+        1px solid var(--border-soft);
+
+      color: var(--muted-2);
+
+      text-align: left;
+
+      font-size: 7px;
+
+      text-transform: uppercase;
+
+    }
+
+
+    .result-table td {
+
+      padding: 7px;
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.045);
+
+      color: var(--muted);
+
+    }
+
+
+    .result-table td:first-child {
+
+      color: white;
+
+    }
+
+
+    .prediction {
+
+      color: var(--green) !important;
+
+      font-weight: 800;
+
+    }
+
+
+    /* =====================================================
+       MODEL INFO
+    ===================================================== */
+
+    .model-grid {
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(3,minmax(0,1fr));
+
+      gap: 7px;
+
+      margin-top: 9px;
+
+    }
+
+
+    .model-stat {
+
+      padding: 8px;
+
+      border:
+        1px solid var(--border-soft);
+
+      border-radius: 7px;
+
+      background: #0b0b0b;
+
+    }
+
+
+    .model-label {
+
+      display: block;
+
+      margin-bottom: 3px;
+
+      color: var(--muted-2);
+
+      font-size: 7px;
+
+      text-transform: uppercase;
+
+    }
+
+
+    .model-value {
+
+      color: white;
+
+      font-family:
+        Consolas,
+        Monaco,
+        monospace;
+
+      font-size: 9px;
+
+    }
+
+
+    /* =====================================================
+       FOOTER
+    ===================================================== */
+
+    footer {
+
+      margin-top: 15px;
+
+      color: var(--muted-2);
+
+      font-size: 8px;
+
+      text-align: center;
+
+    }
+
+
+    footer strong {
+
+      color: var(--wine-light);
+
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+    ===================================================== */
+
+    @media (max-width: 720px) {
+
+      body {
+        padding: 20px 11px 35px;
+      }
+
+
+      header {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+      }
+
+
+      .header-status {
+
+        align-self: flex-start;
+
+      }
+
+
+      .endpoint-grid {
+
+        grid-template-columns: 1fr;
+
+      }
+
+
+      .file-grid {
+
+        grid-template-columns:
+          repeat(2,minmax(0,1fr));
+
+      }
+
+
+      .preview-layout {
+
+        grid-template-columns: 1fr;
+
+      }
+
+
+      .preview {
+
+        width: 100%;
+
+        height: 180px;
+
+      }
+
+    }
+
+
+    @media (max-width: 500px) {
+
+      .api-row {
+
+        grid-template-columns: 1fr;
+
+      }
+
+
+      .model-grid {
+
+        grid-template-columns:
+          repeat(2,minmax(0,1fr));
+
+      }
+
+
+      .batch-file {
+
+        grid-template-columns:
+          1fr auto;
+
+      }
+
+
+      .batch-file-size {
+
+        display: none;
+
+      }
+
+    }
+
+  </style>
+
 </head>
+
+
 <body>
-  <div class="container">
-    <header>
-      <h1>Red <span>MNIST</span></h1>
-      <p>Handwritten digit recognition · FastAPI + PyTorch</p>
-    </header>
 
-    <!-- ==== Single predict card ==== -->
-    <div class="card">
-      <h2>Single Predict</h2>
-      <div class="drop-zone" id="dropZone">
-        <p><span class="highlight">Click to upload</span> or drag &amp; drop an image</p>
-        <p style="margin-top:4px;font-size:12px;">PNG / JPG — a single handwritten digit (0–9)</p>
-      </div>
-      <input type="file" id="fileInput" accept="image/*" />
 
-      <div class="preview" id="preview">
-        <img id="previewImg" alt="preview" />
+<div class="container">
+
+
+  <!-- =====================================================
+       HEADER
+  ===================================================== -->
+
+  <header>
+
+    <div>
+
+      <div class="brand-eyebrow">
+        AI Security Assessment
       </div>
 
-      <button id="predictBtn" disabled>Predict Digit</button>
+      <h1>
+        Red <span>MNIST</span> Security Console
+      </h1>
 
-      <div class="result" id="result"></div>
-    </div>
-
-    <!-- ==== Model info card ==== -->
-    <div class="card">
-      <h2>Model Info</h2>
-      <p style="font-size:13px;color:rgba(255,255,255,0.6);margin:0 0 8px;">
-        Returns architecture, framework version, parameter count, and device from <code>/model_info</code>.
+      <p>
+        Local testing interface for the RedMNIST inference API.
+        Each endpoint displays its result directly inside its own
+        testing area.
       </p>
-      <button id="modelInfoBtn">Fetch Model Info</button>
-      <div class="result" id="modelInfoResult"></div>
+
     </div>
 
-    <!-- ==== Batch predict card ==== -->
-    <div class="card">
-      <h2>Batch Predict</h2>
-      <div class="drop-zone" id="batchDropZone">
-        <p><span class="highlight">Click to select</span> one or more images</p>
-        <p style="margin-top:4px;font-size:12px;">All are sent to <code>/predict_batch</code> in one request</p>
+
+    <div class="header-status">
+
+      <span
+        id="statusDot"
+        class="status-dot"
+      ></span>
+
+      <span id="statusText">
+        API not checked
+      </span>
+
+    </div>
+
+  </header>
+
+
+  <!-- =====================================================
+       API TARGET
+  ===================================================== -->
+
+  <section class="card">
+
+    <div class="card-header">
+
+      <div class="card-title">
+
+        <span class="title-mark"></span>
+
+        <h2>
+          API Target
+        </h2>
+
       </div>
-      <input type="file" id="batchFileInput" accept="image/*" multiple />
 
-      <div class="preview" id="batchPreview"></div>
+      <span class="subtle">
+        Local assessment endpoint
+      </span>
 
-      <button id="batchPredictBtn" disabled>Predict Batch</button>
-
-      <div class="result" id="batchResult"></div>
     </div>
+
+
+    <div class="api-row">
+
+      <input
+        id="apiBase"
+        type="text"
+        value="http://127.0.0.1:8000"
+        placeholder="API base URL"
+      >
+
+
+      <button
+        class="button"
+        onclick="checkHealth()"
+      >
+        Check Health
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- =====================================================
+       BASIC ENDPOINTS
+  ===================================================== -->
+
+  <div class="endpoint-grid">
+
+
+    <!-- ===================================================
+         HEALTH
+    =================================================== -->
+
+    <section class="endpoint-card">
+
+      <div class="endpoint-top">
+
+        <span class="method">
+          GET
+        </span>
+
+        <span class="path">
+          /health
+        </span>
+
+      </div>
+
+
+      <div class="description">
+        Check whether the inference service is reachable
+        and running.
+      </div>
+
+
+      <div class="endpoint-actions">
+
+        <button
+          class="small-button"
+          onclick="runHealth()"
+        >
+          Run Health
+        </button>
+
+      </div>
+
+
+      <!-- RESULT IS HERE -->
+
+      <div
+        id="result-health"
+        class="test-result"
+      ></div>
+
+    </section>
+
+
+    <!-- ===================================================
+         MODEL INFO
+    =================================================== -->
+
+    <section class="endpoint-card">
+
+      <div class="endpoint-top">
+
+        <span class="method">
+          GET
+        </span>
+
+        <span class="path">
+          /model_info
+        </span>
+
+      </div>
+
+
+      <div class="description">
+        Inspect architecture, framework, input shape,
+        device and parameter information.
+      </div>
+
+
+      <div class="endpoint-actions">
+
+        <button
+          class="small-button"
+          onclick="runModelInfo()"
+        >
+          Run Model Info
+        </button>
+
+      </div>
+
+
+      <!-- RESULT IS HERE -->
+
+      <div
+        id="result-model-info"
+        class="test-result"
+      ></div>
+
+    </section>
+
+
   </div>
 
+
+  <!-- =====================================================
+       SINGLE PREDICTION
+  ===================================================== -->
+
+  <section class="card">
+
+    <div class="card-header">
+
+      <div class="card-title">
+
+        <span class="title-mark"></span>
+
+        <h2>
+          POST /predict
+        </h2>
+
+      </div>
+
+      <span class="subtle">
+        Single image
+      </span>
+
+    </div>
+
+
+    <div
+      id="singleDropArea"
+      class="upload-area"
+    >
+
+      <strong>
+        Choose or drop an image
+      </strong>
+
+      <span>
+        Select one file for model inference
+      </span>
+
+
+      <input
+        id="predictFile"
+        class="file-input"
+        type="file"
+        accept="image/*"
+      >
+
+    </div>
+
+
+    <!-- FILE INFO -->
+
+    <div
+      id="singleFileInfo"
+      class="file-info"
+    >
+
+      <div class="file-grid">
+
+
+        <div>
+
+          <span class="info-label">
+            File
+          </span>
+
+          <span
+            id="singleName"
+            class="info-value"
+          >
+            —
+          </span>
+
+        </div>
+
+
+        <div>
+
+          <span class="info-label">
+            Size
+          </span>
+
+          <span
+            id="singleSize"
+            class="info-value"
+          >
+            —
+          </span>
+
+        </div>
+
+
+        <div>
+
+          <span class="info-label">
+            Type
+          </span>
+
+          <span
+            id="singleType"
+            class="info-value"
+          >
+            —
+          </span>
+
+        </div>
+
+
+        <div>
+
+          <span class="info-label">
+            Dimensions
+          </span>
+
+          <span
+            id="singleDimensions"
+            class="info-value"
+          >
+            —
+          </span>
+
+        </div>
+
+
+      </div>
+
+
+      <div
+        id="singleValidation"
+        class="validation"
+      ></div>
+
+
+      <div class="preview-layout">
+
+
+        <div class="preview">
+
+          <img
+            id="singlePreview"
+            alt="Image preview"
+          >
+
+        </div>
+
+
+        <div>
+
+          <div
+            id="singlePreviewName"
+            class="selected-name"
+          >
+            No image selected
+          </div>
+
+
+          <div
+            id="singlePreviewDescription"
+            class="selected-description"
+          >
+            Choose an image to inspect it before sending
+            it to the API.
+          </div>
+
+
+          <div class="action-row">
+
+            <button
+              id="predictButton"
+              class="button"
+              onclick="runPrediction()"
+              disabled
+            >
+              Test Prediction
+            </button>
+
+
+            <button
+              class="button secondary"
+              onclick="clearSingle()"
+            >
+              Clear
+            </button>
+
+          </div>
+
+        </div>
+
+
+      </div>
+
+    </div>
+
+
+    <!-- RESULT IS DIRECTLY HERE -->
+
+    <div
+      id="result-predict"
+      class="test-result"
+    ></div>
+
+  </section>
+
+
+  <!-- =====================================================
+       BATCH PREDICTION
+  ===================================================== -->
+
+  <section class="card">
+
+    <div class="card-header">
+
+      <div class="card-title">
+
+        <span class="title-mark"></span>
+
+        <h2>
+          POST /predict_batch
+        </h2>
+
+      </div>
+
+      <span class="subtle">
+        Multiple images · one request
+      </span>
+
+    </div>
+
+
+    <div
+      id="batchDropArea"
+      class="upload-area"
+    >
+
+      <strong>
+        Choose multiple images
+      </strong>
+
+      <span>
+        All selected files are sent together in one batch request
+      </span>
+
+
+      <input
+        id="batchFiles"
+        class="file-input"
+        type="file"
+        accept="image/*"
+        multiple
+      >
+
+    </div>
+
+
+    <!-- BATCH SUMMARY -->
+
+    <div
+      id="batchSummary"
+      class="batch-summary"
+    >
+
+      <div class="batch-count">
+
+        <span id="batchCount">
+          0
+        </span>
+
+        files selected
+
+      </div>
+
+
+      <div
+        id="batchSummaryText"
+        class="subtle"
+      >
+        Ready
+      </div>
+
+    </div>
+
+
+    <!-- FILE LIST -->
+
+    <div
+      id="batchFilesList"
+      class="batch-files"
+    ></div>
+
+
+    <div
+      id="batchValidation"
+      class="validation"
+    ></div>
+
+
+    <div class="action-row">
+
+      <button
+        id="batchButton"
+        class="button"
+        onclick="runBatch()"
+        disabled
+      >
+        Run Batch
+      </button>
+
+
+      <button
+        class="button secondary"
+        onclick="clearBatch()"
+      >
+        Clear
+      </button>
+
+    </div>
+
+
+    <!-- RESULT IS DIRECTLY HERE -->
+
+    <div
+      id="result-batch"
+      class="test-result"
+    ></div>
+
+  </section>
+
+
+  <footer>
+
+    RedMNIST local assessment console ·
+    <strong>Red Team Testing</strong>
+
+  </footer>
+
+
+</div>
+
+
 <script>
-  const API_BASE = "http://127.0.0.1:8000";
 
-  // ---------- Single predict ----------
-  const API_URL     = API_BASE + "/predict";
-  const dropZone    = document.getElementById("dropZone");
-  const fileInput   = document.getElementById("fileInput");
-  const preview     = document.getElementById("preview");
-  const previewImg  = document.getElementById("previewImg");
-  const predictBtn  = document.getElementById("predictBtn");
-  const resultBox   = document.getElementById("result");
 
-  let selectedFile = null;
+/* =========================================================
+   GENERAL HELPERS
+========================================================= */
 
-  dropZone.addEventListener("click", () => fileInput.click());
 
-  ["dragenter", "dragover"].forEach(evt =>
-    dropZone.addEventListener(evt, e => {
-      e.preventDefault();
-      dropZone.classList.add("dragover");
-    })
-  );
-  ["dragleave", "drop"].forEach(evt =>
-    dropZone.addEventListener(evt, e => {
-      e.preventDefault();
-      dropZone.classList.remove("dragover");
-    })
-  );
-  dropZone.addEventListener("drop", e => {
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  });
-  fileInput.addEventListener("change", e => {
-    const file = e.target.files[0];
-    if (file) handleFile(file);
-  });
+function getBase() {
 
-  function handleFile(file) {
-    if (!file.type.startsWith("image/")) {
-      showResult(resultBox, "error", "Please select a valid image file.");
-      return;
-    }
-    selectedFile = file;
-    previewImg.src = URL.createObjectURL(file);
-    preview.style.display = "block";
-    predictBtn.disabled = false;
-    resultBox.className = "result";
+  return document
+    .getElementById("apiBase")
+    .value
+    .trim()
+    .replace(/\/+$/, "");
+
+}
+
+
+function setStatus(
+  state,
+  text
+) {
+
+  const dot =
+    document.getElementById(
+      "statusDot"
+    );
+
+  const label =
+    document.getElementById(
+      "statusText"
+    );
+
+
+  label.textContent =
+    text;
+
+
+  if (state === "online") {
+
+    dot.style.background =
+      "var(--green)";
+
   }
 
-  predictBtn.addEventListener("click", async () => {
-    if (!selectedFile) return;
-    predictBtn.disabled = true;
-    predictBtn.textContent = "Predicting...";
-    showResult(resultBox, "success", "Sending image to the model...");
+  else if (state === "error") {
 
-    const formData = new FormData();
-    formData.append("file", selectedFile);
+    dot.style.background =
+      "var(--red)";
 
-    try {
-      const res = await fetch(API_URL, { method: "POST", body: formData });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || `HTTP ${res.status}`);
-      }
-      const data = await res.json();
-      showResult(
-        resultBox,
-        "success",
-        `<span class="big">${data.predicted_class}</span>
-         Confidence: <strong>${(data.confidence * 100).toFixed(2)}%</strong>`
+  }
+
+  else {
+
+    dot.style.background =
+      "var(--yellow)";
+
+  }
+
+}
+
+
+function formatBytes(
+  bytes
+) {
+
+  if (bytes === 0) {
+    return "0 B";
+  }
+
+
+  const units = [
+    "B",
+    "KB",
+    "MB",
+    "GB"
+  ];
+
+
+  const index =
+    Math.floor(
+      Math.log(bytes) /
+      Math.log(1024)
+    );
+
+
+  const value =
+    bytes /
+    Math.pow(
+      1024,
+      index
+    );
+
+
+  return (
+    value.toFixed(
+      index === 0
+        ? 0
+        : 2
+    ) +
+    " " +
+    units[index]
+  );
+
+}
+
+
+function escapeHtml(
+  value
+) {
+
+  return String(value)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+
+/* =========================================================
+   API REQUEST
+========================================================= */
+
+
+async function request(
+  endpoint,
+  options = {}
+) {
+
+  const start =
+    performance.now();
+
+
+  const response =
+    await fetch(
+      getBase() + endpoint,
+      options
+    );
+
+
+  const latency =
+    (
+      performance.now() -
+      start
+    ).toFixed(2);
+
+
+  const text =
+    await response.text();
+
+
+  let body;
+
+
+  try {
+
+    body =
+      JSON.parse(text);
+
+  }
+
+  catch {
+
+    body =
+      text;
+
+  }
+
+
+  return {
+    status:
+      response.status,
+
+    latency,
+
+    body
+  };
+
+}
+
+
+/* =========================================================
+   RESULT RENDERER
+========================================================= */
+
+
+function showResult(
+  elementId,
+  title,
+  status,
+  latency,
+  body
+) {
+
+  const box =
+    document.getElementById(
+      elementId
+    );
+
+
+  const success =
+    status >= 200 &&
+    status < 300;
+
+
+  box.className =
+    "test-result show";
+
+
+  box.innerHTML = "";
+
+
+  const header =
+    document.createElement(
+      "div"
+    );
+
+
+  header.className =
+    "result-header";
+
+
+  header.innerHTML = `
+
+    <div class="result-title">
+      ${title}
+    </div>
+
+    <div
+      class="
+        result-status
+        ${success ? "ok" : "error"}
+      "
+    >
+      HTTP ${status}
+    </div>
+
+  `;
+
+
+  const meta =
+    document.createElement(
+      "div"
+    );
+
+
+  meta.className =
+    "result-meta";
+
+
+  meta.innerHTML = `
+
+    <span>
+      Status:
+      <strong>${status}</strong>
+    </span>
+
+    <span>
+      Latency:
+      <strong>${latency} ms</strong>
+    </span>
+
+    <span>
+      Result:
+      <strong
+        style="
+          color:
+          ${success
+            ? "var(--green)"
+            : "var(--red)"};
+        "
+      >
+        ${success
+          ? "SUCCESS"
+          : "ERROR"}
+      </strong>
+    </span>
+
+  `;
+
+
+  const bodyBox =
+    document.createElement(
+      "div"
+    );
+
+
+  bodyBox.className =
+    "result-body";
+
+
+  const pre =
+    document.createElement(
+      "pre"
+    );
+
+
+  pre.textContent =
+    typeof body === "string"
+      ? body
+      : JSON.stringify(
+          body,
+          null,
+          2
+        );
+
+
+  bodyBox.appendChild(
+    pre
+  );
+
+
+  box.appendChild(
+    header
+  );
+
+
+  box.appendChild(
+    meta
+  );
+
+
+  box.appendChild(
+    bodyBox
+  );
+
+
+  /*
+    Scroll directly to the result.
+
+    This means after running a test the user sees
+    the result immediately instead of having to
+    search for it somewhere else.
+  */
+
+  box.scrollIntoView({
+    behavior: "smooth",
+    block: "nearest"
+  });
+
+}
+
+
+/* =========================================================
+   HEALTH
+========================================================= */
+
+
+async function checkHealth() {
+
+  await runHealth();
+
+}
+
+
+async function runHealth() {
+
+  try {
+
+    setStatus(
+      "checking",
+      "Checking API..."
+    );
+
+
+    const result =
+      await request(
+        "/health"
       );
-    } catch (err) {
-      showResult(
-        resultBox,
+
+
+    showResult(
+      "result-health",
+      "Health Result",
+      result.status,
+      result.latency,
+      result.body
+    );
+
+
+    if (
+      result.status >= 200 &&
+      result.status < 300
+    ) {
+
+      setStatus(
+        "online",
+        "API online"
+      );
+
+    }
+
+    else {
+
+      setStatus(
         "error",
-        `Prediction failed: ${err.message}<br/>
-         <small>Is the FastAPI server running at <code>127.0.0.1:8000</code>?</small>`
+        "API returned an error"
       );
-    } finally {
-      predictBtn.disabled = false;
-      predictBtn.textContent = "Predict Digit";
+
     }
-  });
 
-  // ---------- Model info ----------
-  const modelInfoBtn    = document.getElementById("modelInfoBtn");
-  const modelInfoResult = document.getElementById("modelInfoResult");
-
-  modelInfoBtn.addEventListener("click", async () => {
-    modelInfoBtn.disabled = true;
-    modelInfoBtn.textContent = "Fetching...";
-    showResult(modelInfoResult, "success", "Calling /model_info...");
-
-    try {
-      const res = await fetch(API_BASE + "/model_info");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      showResult(modelInfoResult, "success", `<pre>${JSON.stringify(data, null, 2)}</pre>`);
-    } catch (err) {
-      showResult(modelInfoResult, "error", `Failed to fetch model info: ${err.message}`);
-    } finally {
-      modelInfoBtn.disabled = false;
-      modelInfoBtn.textContent = "Fetch Model Info";
-    }
-  });
-
-  // ---------- Batch predict ----------
-  const batchDropZone    = document.getElementById("batchDropZone");
-  const batchFileInput   = document.getElementById("batchFileInput");
-  const batchPreview     = document.getElementById("batchPreview");
-  const batchPredictBtn  = document.getElementById("batchPredictBtn");
-  const batchResult      = document.getElementById("batchResult");
-
-  let batchFiles = [];
-
-  batchDropZone.addEventListener("click", () => batchFileInput.click());
-
-  batchFileInput.addEventListener("change", e => {
-    batchFiles = Array.from(e.target.files);
-    renderBatchPreview();
-  });
-
-  ["dragenter", "dragover"].forEach(evt =>
-    batchDropZone.addEventListener(evt, e => {
-      e.preventDefault();
-      batchDropZone.classList.add("dragover");
-    })
-  );
-  ["dragleave", "drop"].forEach(evt =>
-    batchDropZone.addEventListener(evt, e => {
-      e.preventDefault();
-      batchDropZone.classList.remove("dragover");
-    })
-  );
-  batchDropZone.addEventListener("drop", e => {
-    batchFiles = Array.from(e.dataTransfer.files);
-    renderBatchPreview();
-  });
-
-  function renderBatchPreview() {
-    batchPreview.innerHTML = "";
-    if (batchFiles.length === 0) {
-      batchPreview.style.display = "none";
-      batchPredictBtn.disabled = true;
-      return;
-    }
-    batchPreview.style.display = "block";
-    batchFiles.forEach(f => {
-      const img = document.createElement("img");
-      img.src = URL.createObjectURL(f);
-      img.style.margin = "4px";
-      batchPreview.appendChild(img);
-    });
-    batchPredictBtn.disabled = false;
   }
 
-  batchPredictBtn.addEventListener("click", async () => {
-    if (batchFiles.length === 0) return;
-    batchPredictBtn.disabled = true;
-    batchPredictBtn.textContent = `Predicting ${batchFiles.length} image(s)...`;
-    showResult(batchResult, "success", "Sending batch...");
+  catch (error) {
 
-    const formData = new FormData();
-    batchFiles.forEach(f => formData.append("files", f));
+    setStatus(
+      "error",
+      "Connection failed"
+    );
 
-    try {
-      const res = await fetch(API_BASE + "/predict_batch", { method: "POST", body: formData });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || `HTTP ${res.status}`);
+
+    showResult(
+      "result-health",
+      "Health Result",
+      0,
+      0,
+      {
+        error:
+          error.message
       }
-      const data = await res.json();
+    );
 
-      let rows = "";
-      data.results.forEach(r => {
-        if (r.error) {
-          rows += `<tr><td>${r.upload_name}</td><td colspan="2" style="color:#c66">${r.error}</td></tr>`;
-        } else {
-          rows += `<tr><td>${r.upload_name}</td><td><strong>${r.predicted_class}</strong></td><td>${(r.confidence * 100).toFixed(2)}%</td></tr>`;
-        }
-      });
+  }
 
-      showResult(
-        batchResult,
-        "success",
-        `<div>${data.count} result(s) in ${data.latency_ms} ms</div>
-         <table>
-           <thead><tr><th>File</th><th>Prediction</th><th>Confidence</th></tr></thead>
-           <tbody>${rows}</tbody>
-         </table>`
+}
+
+
+/* =========================================================
+   MODEL INFO
+========================================================= */
+
+
+async function runModelInfo() {
+
+  try {
+
+    const result =
+      await request(
+        "/model_info"
       );
-    } catch (err) {
-      showResult(batchResult, "error", `Batch prediction failed: ${err.message}`);
-    } finally {
-      batchPredictBtn.disabled = false;
-      batchPredictBtn.textContent = "Predict Batch";
+
+
+    showResult(
+      "result-model-info",
+      "Model Information",
+      result.status,
+      result.latency,
+      result.body
+    );
+
+  }
+
+  catch (error) {
+
+    showResult(
+      "result-model-info",
+      "Model Information",
+      0,
+      0,
+      {
+        error:
+          error.message
+      }
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   SINGLE FILE
+========================================================= */
+
+
+const predictInput =
+  document.getElementById(
+    "predictFile"
+  );
+
+
+const singleDropArea =
+  document.getElementById(
+    "singleDropArea"
+  );
+
+
+predictInput.addEventListener(
+  "change",
+  handleSingleFile
+);
+
+
+singleDropArea.addEventListener(
+  "click",
+  function(event) {
+
+    if (
+      event.target !==
+      predictInput
+    ) {
+
+      predictInput.click();
+
     }
+
+  }
+);
+
+
+function handleSingleFile() {
+
+  const file =
+    predictInput.files[0];
+
+
+  if (!file) {
+
+    clearSingle();
+
+    return;
+
+  }
+
+
+  const info =
+    document.getElementById(
+      "singleFileInfo"
+    );
+
+
+  info.classList.add(
+    "show"
+  );
+
+
+  document.getElementById(
+    "singleName"
+  ).textContent =
+    file.name;
+
+
+  document.getElementById(
+    "singleSize"
+  ).textContent =
+    formatBytes(
+      file.size
+    );
+
+
+  document.getElementById(
+    "singleType"
+  ).textContent =
+    file.type ||
+    "unknown";
+
+
+  document.getElementById(
+    "singlePreviewName"
+  ).textContent =
+    file.name;
+
+
+  const validation =
+    document.getElementById(
+      "singleValidation"
+    );
+
+
+  const button =
+    document.getElementById(
+      "predictButton"
+    );
+
+
+  /* -------------------------------------------------------
+     ZERO-BYTE FILE
+  ------------------------------------------------------- */
+
+  if (file.size === 0) {
+
+    validation.className =
+      "validation show error";
+
+
+    validation.textContent =
+      "Empty file detected (0 bytes). " +
+      "The frontend will not send this file. " +
+      "Backend validation is still required for security.";
+
+
+    button.disabled =
+      true;
+
+
+    document.getElementById(
+      "singleDimensions"
+    ).textContent =
+      "—";
+
+
+    document.getElementById(
+      "singlePreview"
+    ).removeAttribute(
+      "src"
+    );
+
+
+    document.getElementById(
+      "singlePreviewDescription"
+    ).textContent =
+      "The file contains no data.";
+
+
+    return;
+
+  }
+
+
+  /*
+    Non-empty files are allowed.
+
+    This is important for your assessment because
+    corrupt or unusual files need to reach the backend
+    so we can observe the backend's validation behavior.
+  */
+
+
+  if (
+    file.type &&
+    file.type.startsWith("image/")
+  ) {
+
+    const url =
+      URL.createObjectURL(
+        file
+      );
+
+
+    const image =
+      document.getElementById(
+        "singlePreview"
+      );
+
+
+    image.onload =
+      function() {
+
+        document.getElementById(
+          "singleDimensions"
+        ).textContent =
+          `${image.naturalWidth} × ${image.naturalHeight}`;
+
+
+        URL.revokeObjectURL(
+          url
+        );
+
+      };
+
+
+    image.onerror =
+      function() {
+
+        document.getElementById(
+          "singleDimensions"
+        ).textContent =
+          "Unreadable";
+
+
+        validation.className =
+          "validation show warning";
+
+
+        validation.textContent =
+          "The browser could not decode this file as a normal image. " +
+          "It can still be sent to the API for backend validation testing.";
+
+
+        button.disabled =
+          false;
+
+      };
+
+
+    image.src =
+      url;
+
+
+    validation.className =
+      "validation show success";
+
+
+    validation.textContent =
+      "Image selected and ready for API testing.";
+
+  }
+
+  else {
+
+    validation.className =
+      "validation show warning";
+
+
+    validation.textContent =
+      "The browser does not identify this as a normal image. " +
+      "It can still be sent to the API to test backend validation.";
+
+
+    document.getElementById(
+      "singleDimensions"
+    ).textContent =
+      "Not detected";
+
+  }
+
+
+  button.disabled =
+    false;
+
+}
+
+
+/* =========================================================
+   SINGLE PREDICTION
+========================================================= */
+
+
+async function runPrediction() {
+
+  const file =
+    predictInput.files[0];
+
+
+  if (!file) {
+    return;
+  }
+
+
+  if (file.size === 0) {
+    return;
+  }
+
+
+  const form =
+    new FormData();
+
+
+  form.append(
+    "file",
+    file
+  );
+
+
+  const button =
+    document.getElementById(
+      "predictButton"
+    );
+
+
+  button.disabled =
+    true;
+
+
+  button.textContent =
+    "Testing...";
+
+
+  try {
+
+    const result =
+      await request(
+        "/predict",
+        {
+          method: "POST",
+          body: form
+        }
+      );
+
+
+    showResult(
+      "result-predict",
+      "Prediction Result",
+      result.status,
+      result.latency,
+      result.body
+    );
+
+  }
+
+  catch (error) {
+
+    showResult(
+      "result-predict",
+      "Prediction Request",
+      0,
+      0,
+      {
+        error:
+          error.message
+      }
+    );
+
+  }
+
+  finally {
+
+    button.disabled =
+      false;
+
+    button.textContent =
+      "Test Prediction";
+
+  }
+
+}
+
+
+/* =========================================================
+   CLEAR SINGLE
+========================================================= */
+
+
+function clearSingle() {
+
+  predictInput.value =
+    "";
+
+
+  document.getElementById(
+    "singleFileInfo"
+  ).classList.remove(
+    "show"
+  );
+
+
+  document.getElementById(
+    "singlePreview"
+  ).removeAttribute(
+    "src"
+  );
+
+
+  document.getElementById(
+    "singlePreviewName"
+  ).textContent =
+    "No image selected";
+
+
+  document.getElementById(
+    "singlePreviewDescription"
+  ).textContent =
+    "Choose an image to inspect it before sending it to the API.";
+
+
+  document.getElementById(
+    "predictButton"
+  ).disabled =
+    true;
+
+
+  document.getElementById(
+    "result-predict"
+  ).className =
+    "test-result";
+
+}
+
+
+/* =========================================================
+   BATCH FILES
+========================================================= */
+
+
+const batchInput =
+  document.getElementById(
+    "batchFiles"
+  );
+
+
+const batchDropArea =
+  document.getElementById(
+    "batchDropArea"
+  );
+
+
+batchInput.addEventListener(
+  "change",
+  handleBatchFiles
+);
+
+
+batchDropArea.addEventListener(
+  "click",
+  function(event) {
+
+    if (
+      event.target !==
+      batchInput
+    ) {
+
+      batchInput.click();
+
+    }
+
+  }
+);
+
+
+function handleBatchFiles() {
+
+  const files =
+    Array.from(
+      batchInput.files
+    );
+
+
+  if (!files.length) {
+
+    clearBatch();
+
+    return;
+
+  }
+
+
+  const summary =
+    document.getElementById(
+      "batchSummary"
+    );
+
+
+  const list =
+    document.getElementById(
+      "batchFilesList"
+    );
+
+
+  const button =
+    document.getElementById(
+      "batchButton"
+    );
+
+
+  summary.classList.add(
+    "show"
+  );
+
+
+  document.getElementById(
+    "batchCount"
+  ).textContent =
+    files.length;
+
+
+  list.innerHTML =
+    "";
+
+
+  list.classList.add(
+    "show"
+  );
+
+
+  let emptyCount =
+    0;
+
+
+  files.forEach(
+    function(file) {
+
+      const row =
+        document.createElement(
+          "div"
+        );
+
+
+      row.className =
+        "batch-file";
+
+
+      const name =
+        document.createElement(
+          "div"
+        );
+
+
+      name.className =
+        "batch-file-name";
+
+
+      name.textContent =
+        file.name;
+
+
+      const size =
+        document.createElement(
+          "div"
+        );
+
+
+      size.className =
+        "batch-file-size";
+
+
+      size.textContent =
+        formatBytes(
+          file.size
+        );
+
+
+      const status =
+        document.createElement(
+          "div"
+        );
+
+
+      if (
+        file.size === 0
+      ) {
+
+        emptyCount++;
+
+
+        status.className =
+          "batch-file-status bad";
+
+
+        status.textContent =
+          "EMPTY";
+
+      }
+
+      else {
+
+        status.className =
+          "batch-file-status good";
+
+
+        status.textContent =
+          "READY";
+
+      }
+
+
+      row.appendChild(
+        name
+      );
+
+
+      row.appendChild(
+        size
+      );
+
+
+      row.appendChild(
+        status
+      );
+
+
+      list.appendChild(
+        row
+      );
+
+    }
+  );
+
+
+  const summaryText =
+    document.getElementById(
+      "batchSummaryText"
+    );
+
+
+  if (
+    emptyCount > 0
+  ) {
+
+    summaryText.textContent =
+      `${emptyCount} empty file${
+        emptyCount === 1
+          ? ""
+          : "s"
+      } detected`;
+
+
+    summaryText.style.color =
+      "var(--yellow)";
+
+  }
+
+  else {
+
+    summaryText.textContent =
+      "All files contain data";
+
+
+    summaryText.style.color =
+      "var(--green)";
+
+  }
+
+
+  /*
+    If there is at least one non-empty file,
+    the batch can be sent.
+
+    Empty files are excluded from the browser-side
+    batch request.
+  */
+
+  button.disabled =
+    files.every(
+      file =>
+        file.size === 0
+    );
+
+}
+
+
+/* =========================================================
+   RUN BATCH
+========================================================= */
+
+
+async function runBatch() {
+
+  const files =
+    Array.from(
+      batchInput.files
+    );
+
+
+  if (!files.length) {
+    return;
+  }
+
+
+  /*
+    Do not send zero-byte files.
+
+    Non-empty files are sent together in ONE request.
+  */
+
+  const validFiles =
+    files.filter(
+      file =>
+        file.size > 0
+    );
+
+
+  if (!validFiles.length) {
+
+    showBatchValidation(
+      "All selected files are empty. No request was sent.",
+      "error"
+    );
+
+
+    return;
+
+  }
+
+
+  const form =
+    new FormData();
+
+
+  /*
+    IMPORTANT:
+
+    Every file uses the SAME field name: "files"
+
+    This matches FastAPI's:
+
+        files: List[UploadFile]
+  */
+
+  validFiles.forEach(
+    function(file) {
+
+      form.append(
+        "files",
+        file
+      );
+
+    }
+  );
+
+
+  const button =
+    document.getElementById(
+      "batchButton"
+    );
+
+
+  button.disabled =
+    true;
+
+
+  button.textContent =
+    "Testing...";
+
+
+  try {
+
+    const result =
+      await request(
+        "/predict_batch",
+        {
+          method: "POST",
+          body: form
+        }
+      );
+
+
+    renderBatchResult(
+      result,
+      validFiles
+    );
+
+  }
+
+  catch (error) {
+
+    showResult(
+      "result-batch",
+      "Batch Request",
+      0,
+      0,
+      {
+        error:
+          error.message
+      }
+    );
+
+  }
+
+  finally {
+
+    button.disabled =
+      false;
+
+
+    button.textContent =
+      "Run Batch";
+
+  }
+
+}
+
+
+/* =========================================================
+   BATCH RESULT
+========================================================= */
+
+
+function renderBatchResult(
+  result,
+  files
+) {
+
+  const box =
+    document.getElementById(
+      "result-batch"
+    );
+
+
+  const success =
+    result.status >= 200 &&
+    result.status < 300;
+
+
+  box.className =
+    "test-result show";
+
+
+  box.innerHTML =
+    "";
+
+
+  const header =
+    document.createElement(
+      "div"
+    );
+
+
+  header.className =
+    "result-header";
+
+
+  header.innerHTML = `
+
+    <div class="result-title">
+      Batch Prediction Result
+    </div>
+
+    <div
+      class="
+        result-status
+        ${success ? "ok" : "error"}
+      "
+    >
+      HTTP ${result.status}
+    </div>
+
+  `;
+
+
+  box.appendChild(
+    header
+  );
+
+
+  const meta =
+    document.createElement(
+      "div"
+    );
+
+
+  meta.className =
+    "result-meta";
+
+
+  const apiResults =
+    result.body &&
+    Array.isArray(
+      result.body.results
+    )
+      ? result.body.results.length
+      : 0;
+
+
+  meta.innerHTML = `
+
+    <span>
+      Sent:
+      <strong>${files.length}</strong>
+    </span>
+
+    <span>
+      API results:
+      <strong>${apiResults}</strong>
+    </span>
+
+    <span>
+      Latency:
+      <strong>${result.latency} ms</strong>
+    </span>
+
+  `;
+
+
+  box.appendChild(
+    meta
+  );
+
+
+  const body =
+    document.createElement(
+      "div"
+    );
+
+
+  body.className =
+    "result-body";
+
+
+  if (
+    success &&
+    result.body &&
+    Array.isArray(
+      result.body.results
+    )
+  ) {
+
+    const wrapper =
+      document.createElement(
+        "div"
+      );
+
+
+    wrapper.className =
+      "table-wrapper";
+
+
+    const table =
+      document.createElement(
+        "table"
+      );
+
+
+    table.className =
+      "result-table";
+
+
+    table.innerHTML = `
+
+      <thead>
+
+        <tr>
+
+          <th>
+            File
+          </th>
+
+          <th>
+            Size
+          </th>
+
+          <th>
+            Prediction
+          </th>
+
+          <th>
+            Confidence
+          </th>
+
+        </tr>
+
+      </thead>
+
+    `;
+
+
+    const tbody =
+      document.createElement(
+        "tbody"
+      );
+
+
+    result.body.results.forEach(
+      function(item) {
+
+        const row =
+          document.createElement(
+            "tr"
+          );
+
+
+        row.innerHTML = `
+
+          <td>
+            ${escapeHtml(
+              item.upload_name ||
+              "unknown"
+            )}
+          </td>
+
+          <td>
+            ${
+              item.size_bytes !== undefined
+                ? formatBytes(
+                    item.size_bytes
+                  )
+                : "—"
+            }
+          </td>
+
+          <td class="prediction">
+            ${
+              item.predicted_class !== undefined
+                ? item.predicted_class
+                : "—"
+            }
+          </td>
+
+          <td>
+            ${
+              item.confidence !== undefined
+                ? Number(
+                    item.confidence
+                  ).toFixed(4)
+                : "—"
+            }
+          </td>
+
+        `;
+
+
+        tbody.appendChild(
+          row
+        );
+
+      }
+    );
+
+
+    table.appendChild(
+      tbody
+    );
+
+
+    wrapper.appendChild(
+      table
+    );
+
+
+    body.appendChild(
+      wrapper
+    );
+
+  }
+
+  else {
+
+    const pre =
+      document.createElement(
+        "pre"
+      );
+
+
+    pre.textContent =
+      typeof result.body === "string"
+        ? result.body
+        : JSON.stringify(
+            result.body,
+            null,
+            2
+          );
+
+
+    body.appendChild(
+      pre
+    );
+
+  }
+
+
+  box.appendChild(
+    body
+  );
+
+
+  box.scrollIntoView({
+    behavior: "smooth",
+    block: "nearest"
   });
 
-  // ---------- Shared helper ----------
-  function showResult(box, type, html) {
-    box.className = "result show " + type;
-    box.innerHTML = html;
-  }
+}
+
+
+/* =========================================================
+   BATCH VALIDATION
+========================================================= */
+
+
+function showBatchValidation(
+  message,
+  type
+) {
+
+  const box =
+    document.getElementById(
+      "batchValidation"
+    );
+
+
+  box.className =
+    `validation show ${type}`;
+
+
+  box.textContent =
+    message;
+
+}
+
+
+/* =========================================================
+   CLEAR BATCH
+========================================================= */
+
+
+function clearBatch() {
+
+  batchInput.value =
+    "";
+
+
+  document.getElementById(
+    "batchSummary"
+  ).classList.remove(
+    "show"
+  );
+
+
+  document.getElementById(
+    "batchFilesList"
+  ).classList.remove(
+    "show"
+  );
+
+
+  document.getElementById(
+    "batchFilesList"
+  ).innerHTML =
+    "";
+
+
+  document.getElementById(
+    "batchValidation"
+  ).className =
+    "validation";
+
+
+  document.getElementById(
+    "batchButton"
+  ).disabled =
+    true;
+
+
+  document.getElementById(
+    "result-batch"
+  ).className =
+    "test-result";
+
+}
+
+
+/* =========================================================
+   DRAG & DROP
+========================================================= */
+
+
+function setupDropArea(
+  area,
+  input
+) {
+
+  [
+    "dragenter",
+    "dragover"
+  ].forEach(
+    function(eventName) {
+
+      area.addEventListener(
+        eventName,
+        function(event) {
+
+          event.preventDefault();
+
+          area.classList.add(
+            "dragover"
+          );
+
+        }
+      );
+
+    }
+  );
+
+
+  [
+    "dragleave",
+    "drop"
+  ].forEach(
+    function(eventName) {
+
+      area.addEventListener(
+        eventName,
+        function(event) {
+
+          event.preventDefault();
+
+          area.classList.remove(
+            "dragover"
+          );
+
+        }
+      );
+
+    }
+  );
+
+
+  area.addEventListener(
+    "drop",
+    function(event) {
+
+      const files =
+        event.dataTransfer.files;
+
+
+      if (!files.length) {
+        return;
+      }
+
+
+      input.files =
+        files;
+
+
+      input.dispatchEvent(
+        new Event(
+          "change"
+        )
+      );
+
+    }
+  );
+
+}
+
+
+setupDropArea(
+  singleDropArea,
+  predictInput
+);
+
+
+setupDropArea(
+  batchDropArea,
+  batchInput
+);
+
+
+/* =========================================================
+   INITIAL STATUS
+========================================================= */
+
+
+setStatus(
+  "idle",
+  "API not checked"
+);
+
+
 </script>
+
+
 </body>
+
 </html>
