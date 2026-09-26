@@ -1,0 +1,11 @@
+MEMBERSHIP INFERENCE DEMONSTRATION
+Model: experiments\backdoor\redmnist_backdoor_demo.pth
+Member samples: 500
+Non-member samples: 500
+
+Mean member confidence: 0.935778
+Mean non-member confidence: 0.923236
+Mean member loss: 0.153159
+Mean non-member loss: 0.154478
+Confidence threshold: 0.929507
+Threshold attack accuracy: 52.30%
