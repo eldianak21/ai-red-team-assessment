@@ -6,4 +6,11 @@ __pycache__/
 Thumbs.db
 data/
 logs/*.log
-!logs/sample.log
+!logs/sample.logcorrupt.png
+fake.png
+large.png
+test_large.bin
+test_unsupported.bmp
+model/redmnist_retrained.pth
+model/redmnist_robust.pth
+model/redmnist_robust_pgd.pth

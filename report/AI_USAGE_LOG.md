@@ -25,6 +25,8 @@ AI assistance was used for the following work:
 
     Reports — writing and organizing all the reports in this repository, including the Attack Report, Adversarial Examples, Pipeline Review, MITRE ATLAS Mapping, NIST AI RMF Mapping, and this AI Usage Log.
 
+    prepare ppt for presentation
+
 # 4. Statement
 
 AI was used to help with task decisions, fixing errors, mitigation design and code, and writing the reports.

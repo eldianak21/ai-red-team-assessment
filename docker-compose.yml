@@ -3,5 +3,20 @@ services:
     build: .
     image: redmnist:latest
     container_name: redmnist-api
+
     ports:
       - "8000:8000"
+
+    volumes:
+      - ./logs:/app/logs
+
+    security_opt:
+      - no-new-privileges:true
+
+    cap_drop:
+      - ALL
+
+    read_only: true
+
+    tmpfs:
+      - /tmp
